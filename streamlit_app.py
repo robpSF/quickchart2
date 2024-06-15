@@ -27,6 +27,10 @@ def process_data(file):
     
     # Merge the additional columns into the pivot table
     merged_data = pd.merge(pivot_table, additional_columns, on='Name', how='left')
+
+    # Reorder columns to move 'LicenceChange' and 'RenewalStatus' next to 'Name'
+    cols = ['Name', 'LicenceChange', 'RenewalStatus'] + [col for col in merged_data.columns if col not in ['Name', 'LicenceChange', 'RenewalStatus']]
+    merged_data = merged_data[cols]
     
     # Create a dataframe to identify exceptions
     exceptions = data.copy()
