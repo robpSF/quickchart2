@@ -8,7 +8,7 @@ def process_data(file):
     data = pd.read_excel(file, sheet_name='contacts')
 
     # Extract relevant columns
-    relevant_data = data[['Name', 'Licence', 'RenewalStatus','Expected_Renewal', 'Expected_Revenue']]
+    relevant_data = data[['Name', 'Licence', 'Expected_Renewal', 'Expected_Revenue']]
     
     # Convert 'Expected_Renewal' to datetime
     relevant_data['Expected_Renewal'] = pd.to_datetime(relevant_data['Expected_Renewal'], errors='coerce')
@@ -20,8 +20,8 @@ def process_data(file):
     relevant_data['YearMonth'] = relevant_data['Expected_Renewal'].dt.strftime('%Y-%m')
     
     # Create a pivot table with year-month as columns and names as rows, including 'Licence'
-    pivot_table = relevant_data.pivot_table(index=['Name', 'Licence'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0)
-
+    pivot_table = relevant_data.pivot_table(index=['Name', 'Licence'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0).reset_index()
+    
     # Additional data columns to be merged
     additional_columns = data[['Name', 'LicenceChange', 'RenewalStatus']].drop_duplicates()
     
@@ -42,9 +42,9 @@ def process_data(file):
     exceptions['Late renewal'] = (exceptions['Expected_Renewal'] > exceptions['renewal_date'])
     
     # Filter the relevant columns for display
-    exceptions_output = exceptions[['Name', 'Licence', 'RenewalStatus','Expected_Renewal', 'renewal_date', 'Missing Expected Date', 'Late renewal']]
+    exceptions_output = exceptions[['Name', 'Licence', 'Expected_Renewal', 'renewal_date', 'Missing Expected Date', 'Late renewal']]
     
-    return pivot_table, exceptions_output
+    return merged_data, exceptions_output
 
 # Streamlit app
 st.title('Renewals Data Analysis')
@@ -53,17 +53,17 @@ st.title('Renewals Data Analysis')
 uploaded_file = st.file_uploader("Upload your Excel file", type=["xlsx"])
 
 if uploaded_file is not None:
-    pivot_table, exceptions_output = process_data(uploaded_file)
+    merged_data, exceptions_output = process_data(uploaded_file)
     
     st.header("Relevant Data")
-    st.dataframe(pivot_table)
+    st.dataframe(merged_data)
     
     st.header("Exceptions")
     st.dataframe(exceptions_output)
     
     # Create a bar chart for the original data
     st.header("Bar Chart: Expected Revenue by Year-Month")
-    pivot_table_sum = pivot_table.sum().reset_index()
+    pivot_table_sum = merged_data.groupby('YearMonth')['Expected_Revenue'].sum().reset_index()
     pivot_table_sum.columns = ['YearMonth', 'Expected_Revenue']
     
     fig, ax = plt.subplots()
@@ -83,8 +83,8 @@ if uploaded_file is not None:
         return processed_data
     
     # Provide download links
-    pivot_table_excel = to_excel(pivot_table)
+    merged_data_excel = to_excel(merged_data)
     exceptions_output_excel = to_excel(exceptions_output)
     
-    st.download_button(label="Download Relevant Data as Excel", data=pivot_table_excel, file_name='relevant_data.xlsx')
+    st.download_button(label="Download Relevant Data as Excel", data=merged_data_excel, file_name='relevant_data.xlsx')
     st.download_button(label="Download Exceptions as Excel", data=exceptions_output_excel, file_name='exceptions.xlsx')
