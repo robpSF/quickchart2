@@ -21,6 +21,12 @@ def process_data(file):
     
     # Create a pivot table with year-month as columns and names as rows, including 'Licence'
     pivot_table = relevant_data.pivot_table(index=['Name', 'Licence'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0)
+
+    # Additional data columns to be merged
+    additional_columns = data[['Name', 'LicenceChange', 'RenewalStatus']].drop_duplicates()
+    
+    # Merge the additional columns into the pivot table
+    merged_data = pd.merge(pivot_table, additional_columns, on='Name', how='left')
     
     # Create a dataframe to identify exceptions
     exceptions = data.copy()
