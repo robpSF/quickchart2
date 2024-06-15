@@ -23,7 +23,7 @@ def process_data(file):
     pivot_table = relevant_data.pivot_table(index=['Name', 'Licence'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0).reset_index()
     
     # Additional data columns to be merged
-    additional_columns = data[['Name', 'LicenceChange', 'RenewalStatus']].drop_duplicates()
+    additional_columns = data[['Name', 'LicenceChange', 'RenewalStatus', 'Updated']].drop_duplicates()
     
     # Merge the additional columns into the pivot table
     merged_data = pd.merge(pivot_table, additional_columns, on='Name', how='left')
