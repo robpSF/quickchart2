@@ -8,8 +8,8 @@ def process_data(file):
     data = pd.read_excel(file, sheet_name='contacts')
 
     # Extract relevant columns
-    relevant_data = data[['Name', 'Licence', 'Expected_Renewal', 'Expected_Revenue']]
-    
+     relevant_data = data[['Name', 'Licence', 'Expected_Renewal', 'Expected_Revenue', 'Updated', 'LicenceChange', 'RenewalStatus']]
+   
     # Convert 'Expected_Renewal' to datetime
     relevant_data['Expected_Renewal'] = pd.to_datetime(relevant_data['Expected_Renewal'], errors='coerce')
     
