@@ -8,7 +8,7 @@ def process_data(file):
     data = pd.read_excel(file, sheet_name='contacts')
 
     # Extract relevant columns
-    relevant_data = data[['Name', 'Licence', 'Expected_Renewal', 'Expected_Revenue']]
+    relevant_data = data[['Name', 'Licence', 'Expected_Renewal', 'Expected_Revenue', 'Updated', 'LicenceChange', 'RenewalStatus']]
     
     # Convert 'Expected_Renewal' to datetime
     relevant_data['Expected_Renewal'] = pd.to_datetime(relevant_data['Expected_Renewal'], errors='coerce')
@@ -19,8 +19,8 @@ def process_data(file):
     # Create a new column with year-month format
     relevant_data['YearMonth'] = relevant_data['Expected_Renewal'].dt.strftime('%Y-%m')
     
-    # Create a pivot table with year-month as columns and names as rows, including 'Licence'
-    pivot_table = relevant_data.pivot_table(index=['Name', 'Licence'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0)
+    # Create a pivot table with year-month as columns and names as rows, including additional columns
+    pivot_table = relevant_data.pivot_table(index=['Name', 'Licence', 'Updated', 'LicenceChange', 'RenewalStatus'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0)
     
     # Create a dataframe to identify exceptions
     exceptions = data.copy()
@@ -49,7 +49,7 @@ uploaded_file = st.file_uploader("Upload your Excel file", type=["xlsx"])
 if uploaded_file is not None:
     pivot_table, exceptions_output = process_data(uploaded_file)
     
-    st.header("Pivot Table")
+    st.header("Renewals")
     st.dataframe(pivot_table)
     
     st.header("Exceptions")
@@ -80,5 +80,5 @@ if uploaded_file is not None:
     pivot_table_excel = to_excel(pivot_table)
     exceptions_output_excel = to_excel(exceptions_output)
     
-    st.download_button(label="Download Pivot Table as Excel", data=pivot_table_excel, file_name='pivot_table.xlsx')
+    st.download_button(label="Download Renewals as Excel", data=pivot_table_excel, file_name='renewals.xlsx')
     st.download_button(label="Download Exceptions as Excel", data=exceptions_output_excel, file_name='exceptions.xlsx')
