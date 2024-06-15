@@ -8,7 +8,7 @@ def process_data(file):
     data = pd.read_excel(file, sheet_name='contacts')
 
     # Extract relevant columns
-    relevant_data = data[['Name', 'Licence', 'Expected_Renewal', 'Expected_Revenue', 'LicenceChange', 'RenewalStatus']]
+    relevant_data = data[['Name', 'Licence', 'RenewalStatus','Expected_Renewal', 'Expected_Revenue']]
     
     # Convert 'Expected_Renewal' to datetime
     relevant_data['Expected_Renewal'] = pd.to_datetime(relevant_data['Expected_Renewal'], errors='coerce')
@@ -20,7 +20,7 @@ def process_data(file):
     relevant_data['YearMonth'] = relevant_data['Expected_Renewal'].dt.strftime('%Y-%m')
     
     # Create a pivot table with year-month as columns and names as rows, including 'Licence'
-    pivot_table = relevant_data.pivot_table(index=['Name', 'Licence', 'LicenceChange', 'RenewalStatus'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0)
+    pivot_table = relevant_data.pivot_table(index=['Name', 'Licence'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0)
     
     # Create a dataframe to identify exceptions
     exceptions = data.copy()
@@ -36,7 +36,7 @@ def process_data(file):
     exceptions['Late renewal'] = (exceptions['Expected_Renewal'] > exceptions['renewal_date'])
     
     # Filter the relevant columns for display
-    exceptions_output = exceptions[['Name', 'Licence', 'Expected_Renewal', 'renewal_date', 'Missing Expected Date', 'Late renewal']]
+    exceptions_output = exceptions[['Name', 'Licence', 'RenewalStatus','Expected_Renewal', 'renewal_date', 'Missing Expected Date', 'Late renewal']]
     
     return pivot_table, exceptions_output
 
