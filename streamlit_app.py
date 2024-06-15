@@ -3,7 +3,7 @@ import pandas as pd
 import io
 import matplotlib.pyplot as plt
 
-# Function to process data and create pivot table and exceptions
+# Function to process data and create the table and exceptions
 def process_data(file):
     data = pd.read_excel(file, sheet_name='contacts')
 
@@ -18,15 +18,6 @@ def process_data(file):
     
     # Create a new column with year-month format
     relevant_data['YearMonth'] = relevant_data['Expected_Renewal'].dt.strftime('%Y-%m')
-    
-    # Create a unique ID for each row to keep rows separate in pivot table
-    relevant_data['UniqueID'] = relevant_data.index
-    
-    # Create a pivot table with year-month as columns and names as rows, including 'Licence'
-    pivot_table = relevant_data.pivot_table(index=['Name', 'Licence', 'UniqueID'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0)
-    
-    # Remove the unique ID from the index
-    pivot_table.reset_index(level='UniqueID', drop=True, inplace=True)
     
     # Create a dataframe to identify exceptions
     exceptions = data.copy()
@@ -44,7 +35,7 @@ def process_data(file):
     # Filter the relevant columns for display
     exceptions_output = exceptions[['Name', 'Licence', 'Expected_Renewal', 'renewal_date', 'Missing Expected Date', 'Late renewal']]
     
-    return pivot_table, exceptions_output, relevant_data
+    return relevant_data, exceptions_output
 
 # Streamlit app
 st.title('Renewals Data Analysis')
@@ -53,10 +44,10 @@ st.title('Renewals Data Analysis')
 uploaded_file = st.file_uploader("Upload your Excel file", type=["xlsx"])
 
 if uploaded_file is not None:
-    pivot_table, exceptions_output, relevant_data = process_data(uploaded_file)
+    relevant_data, exceptions_output = process_data(uploaded_file)
     
-    st.header("Pivot Table")
-    st.dataframe(pivot_table)
+    st.header("Relevant Data")
+    st.dataframe(relevant_data)
     
     st.header("Exceptions")
     st.dataframe(exceptions_output)
@@ -83,8 +74,8 @@ if uploaded_file is not None:
         return processed_data
     
     # Provide download links
-    pivot_table_excel = to_excel(pivot_table)
+    relevant_data_excel = to_excel(relevant_data)
     exceptions_output_excel = to_excel(exceptions_output)
     
-    st.download_button(label="Download Pivot Table as Excel", data=pivot_table_excel, file_name='pivot_table.xlsx')
+    st.download_button(label="Download Relevant Data as Excel", data=relevant_data_excel, file_name='relevant_data.xlsx')
     st.download_button(label="Download Exceptions as Excel", data=exceptions_output_excel, file_name='exceptions.xlsx')
