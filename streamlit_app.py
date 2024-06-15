@@ -8,8 +8,8 @@ def process_data(file):
     data = pd.read_excel(file, sheet_name='contacts')
 
     # Extract relevant columns
-    relevant_data = data[['Name', 'Licence', 'Expected_Renewal', 'Expected_Revenue', 'Updated', 'LicenceChange', 'RenewalStatus']]
-   
+    relevant_data = data[['Name', 'Licence', 'Expected_Renewal', 'Expected_Revenue']]
+    
     # Convert 'Expected_Renewal' to datetime
     relevant_data['Expected_Renewal'] = pd.to_datetime(relevant_data['Expected_Renewal'], errors='coerce')
     
@@ -20,7 +20,7 @@ def process_data(file):
     relevant_data['YearMonth'] = relevant_data['Expected_Renewal'].dt.strftime('%Y-%m')
     
     # Create a pivot table with year-month as columns and names as rows, including 'Licence'
-    pivot_table = relevant_data.pivot_table(index=['Name', 'Licence'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0)
+    pivot_table = relevant_data.pivot(index=['Name', 'Licence'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0)
     
     # Create a dataframe to identify exceptions
     exceptions = data.copy()
@@ -57,7 +57,7 @@ if uploaded_file is not None:
     
     # Create a bar chart for the pivot table
     st.header("Bar Chart: Expected Revenue by Year-Month")
-    pivot_table_sum = pivot_table.sum().reset_index()
+    pivot_table_sum = pivot_table.groupby(level=1).sum().sum().reset_index()
     pivot_table_sum.columns = ['YearMonth', 'Expected_Revenue']
     
     fig, ax = plt.subplots()
