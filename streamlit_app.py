@@ -8,7 +8,7 @@ def process_data(file):
     data = pd.read_excel(file, sheet_name='contacts')
 
     # Extract relevant columns
-    relevant_data = data[['Name', 'Licence', 'Expected_Renewal', 'Expected_Revenue']]
+    relevant_data = data[['Name', 'Licence', 'Expected_Renewal', 'Expected_Revenue', 'LicenceChange', 'RenewalStatus']]
     
     # Convert 'Expected_Renewal' to datetime
     relevant_data['Expected_Renewal'] = pd.to_datetime(relevant_data['Expected_Renewal'], errors='coerce')
@@ -27,7 +27,7 @@ def process_data(file):
     
     # Merge the additional columns into the pivot table
     merged_data = pd.merge(pivot_table, additional_columns, on='Name', how='left')
-
+    
     # Reorder columns to move 'LicenceChange' and 'RenewalStatus' next to 'Name'
     cols = ['Name', 'LicenceChange', 'RenewalStatus'] + [col for col in merged_data.columns if col not in ['Name', 'LicenceChange', 'RenewalStatus']]
     merged_data = merged_data[cols]
@@ -65,9 +65,12 @@ if uploaded_file is not None:
     st.header("Exceptions")
     st.dataframe(exceptions_output)
     
-    # Create a bar chart for the original data
+    # Create a bar chart for the new data
     st.header("Bar Chart: Expected Revenue by Year-Month")
-    pivot_table_sum = merged_data.groupby('YearMonth')['Expected_Revenue'].sum().reset_index()
+    merged_data_melted = merged_data.melt(id_vars=['Name', 'LicenceChange', 'RenewalStatus', 'Licence'], var_name='YearMonth', value_name='Expected_Revenue')
+    merged_data_melted = merged_data_melted[merged_data_melted['YearMonth'].str.match(r'\d{4}-\d{2}')]
+
+    pivot_table_sum = merged_data_melted.groupby('YearMonth')['Expected_Revenue'].sum().reset_index()
     pivot_table_sum.columns = ['YearMonth', 'Expected_Revenue']
     
     fig, ax = plt.subplots()
