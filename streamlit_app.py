@@ -19,8 +19,14 @@ def process_data(file):
     # Create a new column with year-month format
     relevant_data['YearMonth'] = relevant_data['Expected_Renewal'].dt.strftime('%Y-%m')
     
+    # Create a unique ID for each row to keep rows separate in pivot table
+    relevant_data['UniqueID'] = relevant_data.index
+    
     # Create a pivot table with year-month as columns and names as rows, including 'Licence'
-    pivot_table = relevant_data.pivot(index=['Name', 'Licence'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0)
+    pivot_table = relevant_data.pivot(index=['Name', 'Licence', 'UniqueID'], columns='YearMonth', values='Expected_Revenue', fill_value=0)
+    
+    # Remove the unique ID from the index
+    pivot_table.reset_index(level='UniqueID', drop=True, inplace=True)
     
     # Create a dataframe to identify exceptions
     exceptions = data.copy()
@@ -38,7 +44,7 @@ def process_data(file):
     # Filter the relevant columns for display
     exceptions_output = exceptions[['Name', 'Licence', 'Expected_Renewal', 'renewal_date', 'Missing Expected Date', 'Late renewal']]
     
-    return pivot_table, exceptions_output
+    return pivot_table, exceptions_output, relevant_data
 
 # Streamlit app
 st.title('Renewals Data Analysis')
@@ -47,7 +53,7 @@ st.title('Renewals Data Analysis')
 uploaded_file = st.file_uploader("Upload your Excel file", type=["xlsx"])
 
 if uploaded_file is not None:
-    pivot_table, exceptions_output = process_data(uploaded_file)
+    pivot_table, exceptions_output, relevant_data = process_data(uploaded_file)
     
     st.header("Pivot Table")
     st.dataframe(pivot_table)
@@ -55,9 +61,9 @@ if uploaded_file is not None:
     st.header("Exceptions")
     st.dataframe(exceptions_output)
     
-    # Create a bar chart for the pivot table
+    # Create a bar chart for the original data
     st.header("Bar Chart: Expected Revenue by Year-Month")
-    pivot_table_sum = pivot_table.groupby(level=1).sum().sum().reset_index()
+    pivot_table_sum = relevant_data.groupby('YearMonth')['Expected_Revenue'].sum().reset_index()
     pivot_table_sum.columns = ['YearMonth', 'Expected_Revenue']
     
     fig, ax = plt.subplots()
