@@ -13,14 +13,16 @@ def process_data(file):
     # Convert 'Expected_Renewal' to datetime
     relevant_data['Expected_Renewal'] = pd.to_datetime(relevant_data['Expected_Renewal'], errors='coerce')
     
-    # Filter out rows where Expected_Renewal is NaT
-    relevant_data = relevant_data.dropna(subset=['Expected_Renewal'])
-    
     # Create a new column with year-month format
     relevant_data['YearMonth'] = relevant_data['Expected_Renewal'].dt.strftime('%Y-%m')
     
     # Create a pivot table with year-month as columns and names as rows, including additional columns
-    pivot_table = relevant_data.pivot_table(index=['Name', 'Licence', 'Updated', 'LicenceChange', 'RenewalStatus'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0)
+    pivot_table = relevant_data.pivot_table(index=['Name', 'Licence', 'Updated', 'LicenceChange', 'RenewalStatus'], 
+                                            columns='YearMonth', 
+                                            values='Expected_Revenue', 
+                                            aggfunc='sum', 
+                                            fill_value=0, 
+                                            dropna=False)
     
     # Create a dataframe to identify exceptions
     exceptions = data.copy()
