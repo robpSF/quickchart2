@@ -19,9 +19,6 @@ def process_data(file):
     # Create a new column with year-month format
     relevant_data['YearMonth'] = relevant_data['Expected_Renewal'].dt.strftime('%Y-%m')
     
-    # Create a pivot table with year-month as columns and names as rows, including 'Licence'
-    pivot_table = relevant_data.pivot_table(index=['Name', 'Licence'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0)
-    
     # Create a dataframe to identify exceptions
     exceptions = data.copy()
     
@@ -38,7 +35,7 @@ def process_data(file):
     # Filter the relevant columns for display
     exceptions_output = exceptions[['Name', 'Licence', 'Expected_Renewal', 'renewal_date', 'Missing Expected Date', 'Late renewal']]
     
-    return pivot_table, exceptions_output
+    return relevant_data, exceptions_output
 
 # Streamlit app
 st.title('Renewals Data Analysis')
@@ -47,17 +44,17 @@ st.title('Renewals Data Analysis')
 uploaded_file = st.file_uploader("Upload your Excel file", type=["xlsx"])
 
 if uploaded_file is not None:
-    pivot_table, exceptions_output = process_data(uploaded_file)
+    relevant_data, exceptions_output = process_data(uploaded_file)
     
     st.header("Relevant Data")
-    st.dataframe(pivot_table)
+    st.dataframe(relevant_data)
     
     st.header("Exceptions")
     st.dataframe(exceptions_output)
     
     # Create a bar chart for the original data
     st.header("Bar Chart: Expected Revenue by Year-Month")
-    pivot_table_sum = pivot_table.sum().reset_index()
+    pivot_table_sum = relevant_data.groupby('YearMonth')['Expected_Revenue'].sum().reset_index()
     pivot_table_sum.columns = ['YearMonth', 'Expected_Revenue']
     
     fig, ax = plt.subplots()
@@ -77,8 +74,8 @@ if uploaded_file is not None:
         return processed_data
     
     # Provide download links
-    pivot_table_excel = to_excel(pivot_table)
+    relevant_data_excel = to_excel(relevant_data)
     exceptions_output_excel = to_excel(exceptions_output)
     
-    st.download_button(label="Download Relevant Data as Excel", data=pivot_table_excel, file_name='relevant_data.xlsx')
+    st.download_button(label="Download Relevant Data as Excel", data=relevant_data_excel, file_name='relevant_data.xlsx')
     st.download_button(label="Download Exceptions as Excel", data=exceptions_output_excel, file_name='exceptions.xlsx')
