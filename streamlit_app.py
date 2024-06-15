@@ -23,7 +23,7 @@ def process_data(file):
     relevant_data['UniqueID'] = relevant_data.index
     
     # Create a pivot table with year-month as columns and names as rows, including 'Licence'
-    pivot_table = relevant_data.pivot(index=['Name', 'Licence', 'UniqueID'], columns='YearMonth', values='Expected_Revenue', fill_value=0)
+    pivot_table = relevant_data.pivot_table(index=['Name', 'Licence', 'UniqueID'], columns='YearMonth', values='Expected_Revenue', aggfunc='sum', fill_value=0)
     
     # Remove the unique ID from the index
     pivot_table.reset_index(level='UniqueID', drop=True, inplace=True)
